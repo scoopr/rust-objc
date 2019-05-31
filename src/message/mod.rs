@@ -293,4 +293,11 @@ mod tests {
         // Unimplemented selector
         assert!(obj.verify_message::<(u32,), ()>(sel!(setFoo)).is_err());
     }
+
+    #[test]
+    fn test_send_message_wrapped_object() {
+        let obj = test_utils::WrappedObject::new();
+        unsafe { msg_send![obj, isEqual:obj]; }
+    }
+
 }

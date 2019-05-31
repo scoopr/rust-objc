@@ -177,3 +177,37 @@ pub fn custom_subclass() -> &'static Class {
 pub fn custom_subclass_object() -> CustomObject {
     CustomObject::new(custom_subclass())
 }
+
+pub struct WrappedObject(std::ptr::NonNull<crate::runtime::Object>);
+pub enum WrappedObjectRef {}
+impl WrappedObject {
+    pub fn new() -> Self {
+        let cls = class!(NSObject);
+        unsafe {
+            let obj: *mut crate::runtime::Object = msg_send![cls, alloc];
+            let res: Self = msg_send![obj, init];
+            res
+        }
+    }
+}
+
+unsafe impl crate::Message for WrappedObject {}
+unsafe impl crate::Message for WrappedObjectRef {}
+
+impl Deref for WrappedObject {
+    type Target = WrappedObjectRef;
+
+    fn deref(&self) -> &WrappedObjectRef {
+        let obj_ptr = self.0.as_ptr();
+        let ref_ptr = obj_ptr as *const WrappedObjectRef;
+        unsafe { &*ref_ptr }
+    }
+}
+
+impl Drop for WrappedObject {
+    fn drop(&mut self) {
+        unsafe {
+            msg_send![self.0.as_ptr(), release];
+        }
+    }
+}
